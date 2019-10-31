@@ -1,0 +1,22 @@
+---
+title: "Intro To R Final Project"
+author: "Conor Falvey"
+date: "10/31/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Label Data
+```{r}
+words <- readLines("./words_alpha.txt")
+anglo <- readLines("./anglo.txt")
+norse <- readLines("./oldnorse.txt")
+
+words <- words[-c(which(anglo %in% words))]
+words <- words[-c(which(norse %in% words))]
+
+no.germ <- matrix(c(words, 0 * length(words)), nrow = length(words), ncol = 2, byrow = FALSE)
+```
