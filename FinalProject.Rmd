@@ -15,8 +15,21 @@ words <- readLines("./words_alpha.txt")
 anglo <- readLines("./anglo.txt")
 norse <- readLines("./oldnorse.txt")
 
-words <- words[-c(which(anglo %in% words))]
-words <- words[-c(which(norse %in% words))]
+words <- setdiff(words, anglo)
+words <- setdiff(words, norse)
 
-no.germ <- matrix(c(words, 0 * length(words)), nrow = length(words), ncol = 2, byrow = FALSE)
+no.germ <- data.frame(words, rep(0, length(words)))
+names(no.germ)[1] <- "word"
+names(no.germ)[2] <- "ety"
+anglo.df <- data.frame(anglo, rep(1, length(anglo)))
+names(anglo.df)[1] <- "word"
+names(anglo.df)[2] <- "ety"
+norse.df <- data.frame(norse, rep(2, length(norse)))
+names(norse.df)[1] <- "word"
+names(norse.df)[2] <- "ety"
+
+temp <- rbind(no.germ, anglo.df)
+data <- rbind(temp, norse.df)
 ```
+
+## 
