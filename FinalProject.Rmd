@@ -24,7 +24,7 @@ no.label <- data.frame(words, rep(0, length(words)))
 anglo.df <- data.frame(anglo, rep(1, length(anglo)))
 norse.df <- data.frame(norse, rep(2, length(norse)))
 french.df <- data.frame(french, rep(3, length(french)))
-latin.df <- data.frame(latin, rep(3, length(latin)))
+latin.df <- data.frame(latin, rep(4, length(latin)))
 
 names(no.label) <- c("word", "ety")
 names(anglo.df) <- c("word", "ety")
