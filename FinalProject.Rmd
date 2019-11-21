@@ -12,25 +12,27 @@ library(class)
 
 ## Label Data
 ```{r}
-words <- readLines("./words_alpha.txt")
+words <- readLines("./10k.txt")
 anglo <- readLines("./anglo.txt")
 norse <- readLines("./oldnorse.txt")
+french <- readLines("./french.txt")
+latin <- readLines("./latin.txt")
 
-words <- setdiff(words, anglo)
-words <- setdiff(words, norse)
+words <- setdiff(setdiff(setdiff(setdiff(words, anglo), norse), french), latin)
 
-no.germ <- data.frame(words, rep(0, length(words)))
-names(no.germ)[1] <- "word"
-names(no.germ)[2] <- "ety"
+no.label <- data.frame(words, rep(0, length(words)))
 anglo.df <- data.frame(anglo, rep(1, length(anglo)))
-names(anglo.df)[1] <- "word"
-names(anglo.df)[2] <- "ety"
 norse.df <- data.frame(norse, rep(2, length(norse)))
-names(norse.df)[1] <- "word"
-names(norse.df)[2] <- "ety"
+french.df <- data.frame(french, rep(3, length(french)))
+latin.df <- data.frame(latin, rep(3, length(latin)))
 
-temp <- rbind(no.germ, anglo.df)
-data <- rbind(temp, norse.df)
+names(no.label) <- c("word", "ety")
+names(anglo.df) <- c("word", "ety")
+names(norse.df) <- c("word", "ety")
+names(french.df) <- c("word", "ety")
+names(latin.df) <- c("word", "ety")
+
+data <- rbind(rbind(rbind(rbind(no.label, anglo.df), norse.df), french.df), latin.df)
 ```
 
 ## 
