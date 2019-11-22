@@ -33,6 +33,14 @@ names(french.df) <- c("word", "ety")
 names(latin.df) <- c("word", "ety")
 
 data <- rbind(rbind(rbind(rbind(no.label, anglo.df), norse.df), french.df), latin.df)
+data[, 1] <- tolower(data[, 1])
+```
+
+## Developing Input Vectors
+```{r}
+input_vec <- function(word) {
+  
+}
 ```
 
 ## 
