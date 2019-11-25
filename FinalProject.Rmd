@@ -8,6 +8,9 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(class)
+library(neuralnet)
+library(gtools)
+library(stringr)
 ```
 
 ## Label Data
@@ -18,6 +21,7 @@ norse <- readLines("./oldnorse.txt")
 french <- readLines("./french.txt")
 latin <- readLines("./latin.txt")
 
+labels <- c("word", "ety")
 words <- setdiff(setdiff(setdiff(setdiff(words, anglo), norse), french), latin)
 
 no.label <- data.frame(words, rep(0, length(words)))
@@ -26,21 +30,25 @@ norse.df <- data.frame(norse, rep(2, length(norse)))
 french.df <- data.frame(french, rep(3, length(french)))
 latin.df <- data.frame(latin, rep(4, length(latin)))
 
-names(no.label) <- c("word", "ety")
-names(anglo.df) <- c("word", "ety")
-names(norse.df) <- c("word", "ety")
-names(french.df) <- c("word", "ety")
-names(latin.df) <- c("word", "ety")
+names(no.label) <- labels
+names(anglo.df) <- labels
+names(norse.df) <- labels
+names(french.df) <- labels
+names(latin.df) <- labels
 
 data <- rbind(rbind(rbind(rbind(no.label, anglo.df), norse.df), french.df), latin.df)
 data[, 1] <- tolower(data[, 1])
+data <- data[-1, ]
 ```
 
 ## Developing Input Vectors
 ```{r}
-input_vec <- function(word) {
-  
+for (i in 1:length(data$word)) {
+  data[i, 3] <- sum(asc(data[i, 1])) / str_length(data[i, 1])
 }
+labels <- c("word", "ety", "score")
+names(data) <- labels
+
 ```
 
 ## 
