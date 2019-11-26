@@ -11,6 +11,7 @@ library(class)
 library(neuralnet)
 library(gtools)
 library(stringr)
+library(SnowballC)
 ```
 
 ## Label Data
@@ -41,14 +42,69 @@ data[, 1] <- tolower(data[, 1])
 data <- data[-1, ]
 ```
 
-## Developing Input Vectors
+## Getting Statistics
 ```{r}
 for (i in 1:length(data$word)) {
   data[i, 3] <- sum(asc(data[i, 1])) / str_length(data[i, 1])
+  data[i, 4] <- wordStem(data[i, 1], language = "english")
+  data[i, 5] <- sum(asc(data[i, 4])) / str_length(data[i, 4])
+  data[i, 6] <- data[i, 5] - data[i, 3]
 }
-labels <- c("word", "ety", "score")
+
+labels <- c("word", "ety", "score", "stem", "stemScore", "diff")
 names(data) <- labels
+
+numerics <- data.frame(data[, 2], data[, 3], data[, 5], data[, 6])
+names(numerics) <- c("ety", "score", "stemScore", "diff")
 
 ```
 
-## 
+## Planning Neural Network
+```{r}
+index <- sample(1:nrow(numerics),round(0.75*nrow(numerics)))
+train <- numerics[index,]
+test <- numerics[-index,]
+lm.fit <- glm(train$ety ~ ., data=train)
+summary(lm.fit)
+pr.lm <- predict(lm.fit,test)
+MSE.lm <- sum((pr.lm - test$ety)^2)/nrow(test)
+
+maxs <- apply(numerics, 2, max) 
+mins <- apply(numerics, 2, min)
+
+scaled <- as.data.frame(scale(numerics, center = mins, scale = maxs - mins))
+
+train_ <- scaled[index,]
+test_ <- scaled[-index,]
+
+library(neuralnet)
+n <- names(train_)
+f <- as.formula(paste("train_$ety ~", paste(n[!n %in% "ety"], collapse = " + ")))
+nn <- neuralnet(f, data = train_, hidden = c(5,3), linear.output = T, threshold = 0.1, stepmax = 1e6)
+
+pr.nn <- compute(nn, test_[ ,1:4])
+
+pr.nn_ <- pr.nn$net.result*(max(numerics$ety)-min(numerics$ety))+min(numerics$ety)
+test.r <- (test_$ety)*(max(numerics$ety)-min(numerics$ety))+min(numerics$ety)
+
+MSE.nn <- sum((test.r - pr.nn_)^2)/nrow(test_)
+
+print(paste(MSE.lm,MSE.nn))
+
+
+par(mfrow=c(1,2))
+
+plot(test$ety, pr.nn_, col = 'red', main = 'Real vs predicted NN', pch = 18, cex = 0.7)
+abline(0, 1, lwd = 2)
+legend('bottomright', legend = 'NN', pch = 18, col = 'red', bty = 'n')
+
+plot(test$ety, pr.lm, col = 'blue', main = 'Real vs predicted lm', pch = 18, cex = 0.7)
+abline(0, 1, lwd = 2)
+legend('bottomright', legend = 'LM', pch = 18, col = 'blue', bty = 'n', cex = .95)
+
+plot(test$ety, pr.nn_, col = 'red', main = 'Real vs predicted NN', pch = 18, cex = 0.7)
+points(test$ety, pr.lm, col = 'blue', pch = 18, cex = 0.7)
+abline(0, 1, lwd = 2)
+legend('bottomright', legend = c('NN','LM'), pch = 18, col = c('red','blue'))
+```
+
