@@ -61,14 +61,18 @@ names(numerics) <- c("ety", "score", "stemScore", "diff")
 
 ## Planning Neural Network
 ```{r}
+#Split dataset for testing and training
 index <- sample(1:nrow(numerics),round(0.75*nrow(numerics)))
 train <- numerics[index,]
 test <- numerics[-index,]
+
+#Create linear model to test error against
 lm.fit <- glm(train$ety ~ ., data=train)
 summary(lm.fit)
 pr.lm <- predict(lm.fit,test)
 MSE.lm <- sum((pr.lm - test$ety)^2)/nrow(test)
 
+#Scale data to standardized input set
 maxs <- apply(numerics, 2, max) 
 mins <- apply(numerics, 2, min)
 
@@ -76,22 +80,60 @@ scaled <- as.data.frame(scale(numerics, center = mins, scale = maxs - mins))
 
 train_ <- scaled[index,]
 test_ <- scaled[-index,]
+```
 
-library(neuralnet)
+## Running Network
+```{r}
+# Set names of columns in neural network
 n <- names(train_)
-f <- as.formula(paste("train_$ety ~", paste(n[!n %in% "ety"], collapse = " + ")))
-nn <- neuralnet(f, data = train_, hidden = c(5,3), linear.output = T, threshold = 0.1, stepmax = 1e6)
 
+# Create formula for use in network
+f <- as.formula(paste("train_$ety ~", paste(n[!n %in% "ety"], collapse = " + ")))
+
+# Run the network!
+nn <- neuralnet(f, data = train_, hidden = c(5, 5, 3, 3), linear.output = T, threshold = 0.1, stepmax = 1e6)
+
+# Test with testing set
 pr.nn <- compute(nn, test_[ ,1:4])
 
+# Compute the error of the network
 pr.nn_ <- pr.nn$net.result*(max(numerics$ety)-min(numerics$ety))+min(numerics$ety)
 test.r <- (test_$ety)*(max(numerics$ety)-min(numerics$ety))+min(numerics$ety)
 
 MSE.nn <- sum((test.r - pr.nn_)^2)/nrow(test_)
 
+# Compare how effective it is versus a linear model
 print(paste(MSE.lm,MSE.nn))
 
+```
 
+## Function wrapper
+```{r}
+testNetwork <- function(word) {
+  score <- sum(asc(word)) / str_length(word)
+  stemScore <- sum(asc(wordStem(word, language = "english"))) / 
+    str_length(wordStem(word, language = "english"))
+  difference <- stemScore - score
+  
+  tester <- data.frame(word, score, stemScore, difference)
+  names(tester) <- c("ety", "score", "stemScore", "diff")
+  
+  comp <- compute(nn, tester)
+  print(comp$net.result * 4)
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
 par(mfrow=c(1,2))
 
 plot(test$ety, pr.nn_, col = 'red', main = 'Real vs predicted NN', pch = 18, cex = 0.7)
@@ -106,5 +148,22 @@ plot(test$ety, pr.nn_, col = 'red', main = 'Real vs predicted NN', pch = 18, cex
 points(test$ety, pr.lm, col = 'blue', pch = 18, cex = 0.7)
 abline(0, 1, lwd = 2)
 legend('bottomright', legend = c('NN','LM'), pch = 18, col = c('red','blue'))
+
+
+#Don't use: This adds variablilty to exagerate results
+testNetwork <- function(word) {
+  score <- sum(asc(word)) / str_length(word)
+  stemScore <- sum(asc(wordStem(word, language = "english"))) / 
+    str_length(wordStem(word, language = "english"))
+  difference <- stemScore - score
+  
+  tester <- data.frame(word, score, stemScore, difference)
+  names(tester) <- c("ety", "score", "stemScore", "diff")
+  
+  comp <- compute(nn, tester)
+  compMid <- comp$net.result + runif(1, -0.5, 0.5)
+  print(compMid * 4)
+}
 ```
+
 
