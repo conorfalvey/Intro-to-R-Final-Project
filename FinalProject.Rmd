@@ -2,10 +2,38 @@
 title: "Intro To R Final Project"
 author: "Conor Falvey"
 date: "10/31/2019"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
-```{r setup, include=FALSE}
+Our motivation for this project came from all three of us sharing a common interest in machine learning.  
+Since all three of us come from different backgrounds and speak multiple languages, we had to  
+establish an affective way to communicate when deciding what our project was going to be. During our  
+meetings, we started to notice how similar some English words are to some of the words in our respective  
+languages. This then steered us into natural language processing using machine learning as we wanted to  
+learn more about the origins of the English language.
+    
+
+The data thst we analyze is from 6 different text files that we custom created by referencing off of  
+[this](https://en.wikipedia.org/wiki/Foreign_language_influences_in_English). Each file contains a  
+list of English words that derive from a certain language. The name of the language is the file name.  
+For example the file, "anglo.txt" contains a list of English words that originate from Anglo-Saxon  
+or, Old English. "french.txt" contains English words originating from French, "latin.txt" from Latin,  
+and etc. The file "10k.txt" contains the 10,000 most used words in the current English language and  
+those are the words the neural network operates on.  
+    
+
+The biggest problem we face by far, is trying to generalize a single word into just one category.  
+There are plenty of words in the English language the originate from multiple languages as opposed to  
+just one. Although we can make our neural network to take into account all the different languages a  
+word might originate from, there are just too many outlying factors to take care of that can make our  
+inference 100% correct and free from error.   
+    
+  
+Packages we used for this project:
+```{r}
 knitr::opts_chunk$set(echo = TRUE)
 library(class)
 library(neuralnet)
@@ -13,6 +41,18 @@ library(gtools)
 library(stringr)
 library(SnowballC)
 ```
+  
+  
+One of the main things we learned from this project is how powerful neural networks can be. They're not  
+the most friendly to work with, however, they epitomize the whole concept of machine learning. Starting  
+off by training a computer to recognize small patterns, we can quickly create an selection of different  
+possibilities that can lead to some really interesting results. Neural networks are also useful in a  
+sense that they can give a fairly accurate result even when given sub-par knowledge because they build  
+upon prior inferences.  
+One thing we could improve about this project is have more accurate and fixed data sets. Since we created  
+our own datasets from a wikipedia page, it's not the best. However, that is one of the struggles when  
+evaluating the origins of a language, there's only a handful of information you can find online, becuase  
+language itself is so complex. Thus, we had to settle for creating our own datasets.
 
 ## Label Data
 ```{r}
@@ -73,7 +113,7 @@ pr.lm <- predict(lm.fit,test)
 MSE.lm <- sum((pr.lm - test$ety)^2)/nrow(test)
 
 #Scale data to standardized input set
-maxs <- apply(numerics, 2, max) 
+maxs <- apply(numerics, 2, max)
 mins <- apply(numerics, 2, min)
 
 scaled <- as.data.frame(scale(numerics, center = mins, scale = maxs - mins))
@@ -111,25 +151,17 @@ print(paste(MSE.lm,MSE.nn))
 ```{r}
 testNetwork <- function(word) {
   score <- sum(asc(word)) / str_length(word)
-  stemScore <- sum(asc(wordStem(word, language = "english"))) / 
+  stemScore <- sum(asc(wordStem(word, language = "english"))) /
     str_length(wordStem(word, language = "english"))
   difference <- stemScore - score
-  
+
   tester <- data.frame(word, score, stemScore, difference)
   names(tester) <- c("ety", "score", "stemScore", "diff")
-  
+
   comp <- compute(nn, tester)
   print(comp$net.result * 4)
 }
 ```
-
-
-
-
-
-
-
-
 
 
 
@@ -153,13 +185,13 @@ legend('bottomright', legend = c('NN','LM'), pch = 18, col = c('red','blue'))
 #Don't use: This adds variablilty to exagerate results
 testNetwork <- function(word) {
   score <- sum(asc(word)) / str_length(word)
-  stemScore <- sum(asc(wordStem(word, language = "english"))) / 
+  stemScore <- sum(asc(wordStem(word, language = "english"))) /
     str_length(wordStem(word, language = "english"))
   difference <- stemScore - score
-  
+
   tester <- data.frame(word, score, stemScore, difference)
   names(tester) <- c("ety", "score", "stemScore", "diff")
-  
+
   comp <- compute(nn, tester)
   compMid <- comp$net.result + runif(1, -0.5, 0.5)
   print(compMid * 4)
