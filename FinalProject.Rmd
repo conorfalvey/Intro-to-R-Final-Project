@@ -1,6 +1,6 @@
 ---
 title: "Intro To R Final Project"
-author: "Conor Falvey"
+author: "Conor Falvey, Tanja Neundel, Mushahid Hassan"
 date: "10/31/2019"
 output:
   pdf_document: default
@@ -62,9 +62,11 @@ norse <- readLines("./oldnorse.txt")
 french <- readLines("./french.txt")
 latin <- readLines("./latin.txt")
 
+#Set column names and find words with no known origin
 labels <- c("word", "ety")
 words <- setdiff(setdiff(setdiff(setdiff(words, anglo), norse), french), latin)
 
+#Label data with distinct numbers
 no.label <- data.frame(words, rep(0, length(words)))
 anglo.df <- data.frame(anglo, rep(1, length(anglo)))
 norse.df <- data.frame(norse, rep(2, length(norse)))
@@ -77,6 +79,7 @@ names(norse.df) <- labels
 names(french.df) <- labels
 names(latin.df) <- labels
 
+#Join into one labelled dataframe
 data <- rbind(rbind(rbind(rbind(no.label, anglo.df), norse.df), french.df), latin.df)
 data[, 1] <- tolower(data[, 1])
 data <- data[-1, ]
@@ -84,6 +87,7 @@ data <- data[-1, ]
 
 ## Getting Statistics
 ```{r}
+#Developing secondary statistics
 for (i in 1:length(data$word)) {
   data[i, 3] <- sum(asc(data[i, 1])) / str_length(data[i, 1])
   data[i, 4] <- wordStem(data[i, 1], language = "english")
@@ -131,7 +135,8 @@ n <- names(train_)
 f <- as.formula(paste("train_$ety ~", paste(n[!n %in% "ety"], collapse = " + ")))
 
 # Run the network!
-nn <- neuralnet(f, data = train_, hidden = c(5, 5, 3, 3), linear.output = T, threshold = 0.1, stepmax = 1e6)
+nn <- neuralnet(f, data = train_, hidden = c(5, 5, 3, 3), linear.output = T, 
+                threshold = 0.1, stepmax = 1e6)
 
 # Test with testing set
 pr.nn <- compute(nn, test_[ ,1:4])
@@ -161,10 +166,11 @@ testNetwork <- function(word) {
   comp <- compute(nn, tester)
   print(comp$net.result * 4)
 }
+testNetwork("random")
 ```
 
 
-
+#Visualization
 ```{r}
 par(mfrow=c(1,2))
 
@@ -180,22 +186,6 @@ plot(test$ety, pr.nn_, col = 'red', main = 'Real vs predicted NN', pch = 18, cex
 points(test$ety, pr.lm, col = 'blue', pch = 18, cex = 0.7)
 abline(0, 1, lwd = 2)
 legend('bottomright', legend = c('NN','LM'), pch = 18, col = c('red','blue'))
-
-
-#Don't use: This adds variablilty to exagerate results
-testNetwork <- function(word) {
-  score <- sum(asc(word)) / str_length(word)
-  stemScore <- sum(asc(wordStem(word, language = "english"))) /
-    str_length(wordStem(word, language = "english"))
-  difference <- stemScore - score
-
-  tester <- data.frame(word, score, stemScore, difference)
-  names(tester) <- c("ety", "score", "stemScore", "diff")
-
-  comp <- compute(nn, tester)
-  compMid <- comp$net.result + runif(1, -0.5, 0.5)
-  print(compMid * 4)
-}
 ```
 
 
